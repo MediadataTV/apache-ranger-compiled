@@ -84,7 +84,7 @@ jobs:
       - name: Config local Maven
         uses: s4u/maven-settings-action@v2.6.0
         with:
-          mirrors: '[{"id": "maven-restlet-unblocker", "name": "Maver Restlet http unblocker", "mirrorOf": "maven-restlet", "url": "http://maven.restlet.org"}]'
+          mirrors: '[{"id": "maven-default-http-blocker", "name": "Maven external http unblocker", "mirrorOf": "dummy", "url": "http://0.0.0.0"}]'
       - name: Cache local Maven repository
         uses: actions/cache@v2
         with:
@@ -115,12 +115,12 @@ jobs:
     permissions:
       contents: write
     needs: build
-    steps: 
+    steps:
       - name: Create release ${{ version }}
         id: create-release
         uses: ncipollo/release-action@v1
         with:
-          name: Apache Ranger ${{ version }}          
+          name: Apache Ranger ${{ version }}
           artifacts: "apache-ranger-${{ version }}/target/*.tar.gz,apache-ranger-${{ version }}/target/*.jar"
           replacesArtifacts: true
           allowUpdates: true
