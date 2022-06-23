@@ -104,39 +104,39 @@ jobs:
       - name: End build
         id: end-build
         run: |
-          echo "::set-output name=version::${{ matrix.version }}"
+          echo "::set-output name=matrix::${{ toJSON(matrix) }}"
   release:
-    name: Build Apache Ranger ${{ version }}
-    if: ${{ needs.build.outputs.version != 'none' }}
+    name: Build Apache Ranger ${{ matrix.version }}
+    if: ${{ needs.build.outputs.matrix != 'none' }}
     strategy:
       fail-fast: false
-      version: ${{ needs.build.outputs.version }}
+      matrix: ${{ fromJson(needs.build.outputs.matrix) }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
     needs: build
     steps:
-      - name: Create release ${{ version }}
+      - name: Create release ${{ matrix.version }}
         id: create-release
         uses: ncipollo/release-action@v1
         with:
-          name: Apache Ranger ${{ version }}
-          artifacts: "apache-ranger-${{ version }}/target/*.tar.gz,apache-ranger-${{ version }}/target/*.jar"
+          name: Apache Ranger ${{ matrix.version }}
+          artifacts: "apache-ranger-${{ matrix.version }}/target/*.tar.gz,apache-ranger-${{ matrix.version }}/target/*.jar"
           replacesArtifacts: true
           allowUpdates: true
-          tag: ${{ version }}
+          tag: ${{ matrix.version }}
           token: ${{ secrets.GITHUB_TOKEN }}
       - name: Checkout Apache Ranger compiled
         uses: actions/checkout@v2
         with:
           path: apache-ranger-compiled
-      - name: Check Apache Ranger ${{ version }} as released
+      - name: Check Apache Ranger ${{ matrix.version }} as released
         run: |
           cd apache-ranger-compiled
           git config user.email "${{ secrets.ACTIONS_USER_EMAIL }}"
           git config user.name "${{ secrets.ACTIONS_USER_NAME }}"
           git pull --rebase origin master
-          echo ${{ version }} >> ./compiled
+          echo ${{ matrix.version }} >> ./compiled
           git add compiled
-          git commit -m "Set Apache Ranger ${{ version }} as released"
+          git commit -m "Set Apache Ranger ${{ matrix.version }} as released"
           git push origin master
