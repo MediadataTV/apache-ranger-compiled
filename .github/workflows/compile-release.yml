@@ -104,7 +104,7 @@ jobs:
       - name: End build
         id: end-build
         run: |
-          echo "::set-output name=matrix::${{ toJSON(matrix) }}"
+          echo "::set-output name=matrix::${{ needs.discover-new-releases.outputs.matrix }}"
   release:
     name: Build Apache Ranger ${{ matrix.version }}
     if: ${{ needs.build.outputs.matrix != 'none' }}
