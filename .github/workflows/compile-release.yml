@@ -1,6 +1,11 @@
 name: Compile Apache Ranger
 on:
   workflow_dispatch:
+    inputs:
+      rangerTag:
+        description: 'Ranger tag to build'
+        type: string
+        required: false
   schedule:
     - cron: '0 4 * * *'
 
@@ -29,9 +34,15 @@ jobs:
 
       - name: Discover Apache Ranger releases
         id: discover-releases
+        env:
+          RANGER_TAG: ${{ inputs.rangerTag }}
         run: |
           compiled=$(cat ./apache-ranger-compiled/compiled)
-          versions=$((git --git-dir ./ranger/.git tag | grep release-ranger- | sed -e "s/release-ranger-//g" | grep -v "${compiled}") || echo "none")
+          if [[ "${RANGER_TAG}" == "" ]]; then
+            versions=$((git --git-dir ./ranger/.git tag | grep release-ranger- | sed -e "s/release-ranger-//g" | grep -v "${compiled}") || echo "none")
+          else
+            versions=${RANGER_TAG}
+          fi
           if [[ "${versions}" == "none" ]]; then
             matrix="none"
           else
@@ -56,7 +67,8 @@ jobs:
           wget -nv "https://archive.apache.org/dist/ranger/KEYS" -O "ranger-KEYS"
           gpg --import ranger-KEYS
           gpg --verify apache-ranger.tar.gz.asc apache-ranger.tar.gz
-          tar zxf apache-ranger.tar.gz
+          mkdir -p ./apache-ranger-${{ matrix.version }}
+          tar zxf apache-ranger.tar.gz -C ./apache-ranger-${{ matrix.version }} --strip-components=1 
           cd apache-ranger-${{ matrix.version }}
           java_version=$(cat pom.xml | grep -Eo "<java.version.required>.*</java.version.required>" | sed "s/<java.version.required>//g" | sed "s </java.version.required>  g")
           echo "::set-output name=java-version::$java_version"
