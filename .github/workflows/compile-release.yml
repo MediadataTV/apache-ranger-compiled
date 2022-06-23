@@ -58,6 +58,8 @@ jobs:
       matrix: ${{ fromJson(needs.discover-new-releases.outputs.matrix) }}
     runs-on: ubuntu-latest
     needs: discover-new-releases
+    outputs:
+      matrix: ${{ steps.end-build.outputs.matrix }}
     steps:
       - name: Download Apache Ranger ${{ matrix.version }}
         id: download-ranger 
@@ -99,37 +101,42 @@ jobs:
           else
             mvn clean compile package -DskipTests
           fi
-        
-      - name: Create release ${{ matrix.version }}
-        id: create-release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ matrix.version }}
-          release_name: Apache Ranger ${{ matrix.version }}
-          draft: false
-          prerelease: false
-        
-      - name: Publish Apache Ranger ${{ matrix.version }}
+      - name: End build
+        id: end-build
         run: |
-          cd apache-ranger-${{ matrix.version }}/target
-          for asset in *.{tar.gz,jar}; do
-            curl -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" -H "Content-Type: $(file -b --mime-type $asset)" --data-binary @$asset "${{ steps.create-release.outputs.upload_url }}=$(basename $asset)"
-          done
-
+          echo "::set-output name=version::${{ matrix.version }}"
+  release:
+    name: Build Apache Ranger ${{ version }}
+    if: ${{ needs.build.outputs.version != 'none' }}
+    strategy:
+      fail-fast: false
+      version: ${{ needs.build.outputs.version }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    needs: build
+    steps: 
+      - name: Create release ${{ version }}
+        id: create-release
+        uses: ncipollo/release-action@v1
+        with:
+          name: Apache Ranger ${{ version }}          
+          artifacts: "apache-ranger-${{ version }}/target/*.tar.gz,apache-ranger-${{ version }}/target/*.jar"
+          replacesArtifacts: true
+          allowUpdates: true
+          tag: ${{ version }}
+          token: ${{ secrets.GITHUB_TOKEN }}
       - name: Checkout Apache Ranger compiled
         uses: actions/checkout@v2
         with:
           path: apache-ranger-compiled
-
-      - name: Check Apache Ranger ${{ matrix.version }} as released
+      - name: Check Apache Ranger ${{ version }} as released
         run: |
           cd apache-ranger-compiled
           git config user.email "${{ secrets.ACTIONS_USER_EMAIL }}"
           git config user.name "${{ secrets.ACTIONS_USER_NAME }}"
           git pull --rebase origin master
-          echo ${{ matrix.version }} >> ./compiled
+          echo ${{ version }} >> ./compiled
           git add compiled
-          git commit -m "Check Apache Ranger ${{ matrix.version }} as released"
+          git commit -m "Set Apache Ranger ${{ version }} as released"
           git push origin master
