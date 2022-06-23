@@ -97,9 +97,9 @@ jobs:
         run: |
           cd apache-ranger-${{ matrix.version }}
           if dpkg --compare-versions "${{ matrix.version }}" "lt" "2.1.0"; then
-            mvn clean compile package assembly:assembly -DskipTests
+            mvn clean compile package assembly:assembly -DskipTests --no-transfer-progress -B -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn
           else
-            mvn clean compile package -DskipTests
+            mvn clean compile package -DskipTests --no-transfer-progress -B -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn
           fi
       - name: End build
         id: end-build
