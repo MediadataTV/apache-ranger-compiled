@@ -82,7 +82,7 @@ jobs:
       - name: Config local Maven
         uses: s4u/maven-settings-action@v2.6.0
         with:
-          mirrors: '[{"id": "maven-default-http-blocker", "name": "Pseudo repository to mirror external repositories initially using HTTP.", "mirrorOf": "external:http:*", "url": "http://0.0.0.0/"}]'
+          mirrors: '[{"id": "maven-restlet-unblocker", "name": "", "mirrorOf": "maven-restlet", "url": "http://maven.restlet.org"}]'
       - name: Cache local Maven repository
         uses: actions/cache@v2
         with:
