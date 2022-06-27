@@ -112,6 +112,9 @@ jobs:
           else
             mvn clean compile package -DskipTests --no-transfer-progress -B -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn
           fi
+      - name: Get current date
+        id: date
+        run: echo "::set-output name=date::$(date +'%Y-%m-%d %H:%i:%s')"
       - name: Create release ${{ matrix.version }}
         id: create-release
         uses: ncipollo/release-action@v1
@@ -119,6 +122,7 @@ jobs:
           name: Apache Ranger ${{ matrix.version }}
           artifacts: "apache-ranger-${{ matrix.version }}/target/*.tar.gz,apache-ranger-${{ matrix.version }}/target/*.jar"
           replacesArtifacts: true
+          body: "Apache Ranger compiled version ${{ matrix.version }} [Run timestamp ${{ steps.date.outputs.date }}]"
           allowUpdates: true
           tag: ${{ matrix.version }}
           token: ${{ secrets.GITHUB_TOKEN }}
