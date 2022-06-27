@@ -92,6 +92,18 @@ jobs:
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-maven-
+      - name: Choose Python version
+        id: choose-python-version
+        run: |
+          python_version='3.9'
+          if dpkg --compare-versions "${{ matrix.version }}" "lt" "2.0.0"; then
+            python_version='2.7'
+          fi
+          echo "::set-output name=python-version::${python_version}"
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ steps.choose-python-version.outputs.python-version }}
       - name: Build Apache Ranger ${{ matrix.version }}
         run: |
           cd apache-ranger-${{ matrix.version }}
