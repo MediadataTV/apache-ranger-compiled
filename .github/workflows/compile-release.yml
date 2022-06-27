@@ -104,9 +104,10 @@ jobs:
       - name: End build
         id: end-build
         run: |
-          echo "::set-output name=matrix::${{ needs.discover-new-releases.outputs.matrix }}"
+          m=$(echo '${{ toJson(fromJson(needs.discover-new-releases.outputs.matrix)) }}' | jq -c)
+          echo "::set-output name=matrix::$m"
   release:
-    name: Build Apache Ranger ${{ matrix.version }}
+    name: Release Apache Ranger ${{ matrix.version }}
     if: ${{ needs.build.outputs.matrix != 'none' }}
     strategy:
       fail-fast: false
