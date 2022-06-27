@@ -38,8 +38,9 @@ jobs:
           RANGER_TAG: ${{ inputs.rangerTag }}
         run: |
           compiled=$(cat ./apache-ranger-compiled/compiled)
+          skip=$(cat ./apache-ranger-compiled/skip-version)
           if [[ "${RANGER_TAG}" == "" ]]; then
-            versions=$((git --git-dir ./ranger/.git tag | grep release-ranger- | sed -e "s/release-ranger-//g" | grep -v "${compiled}") || echo "none")
+            versions=$((git --git-dir ./ranger/.git tag | grep release-ranger- | sed -e "s/release-ranger-//g" | grep -v "${compiled}" | grep -v "${skip}") || echo "none")
           else
             versions=${RANGER_TAG}
           fi
@@ -120,7 +121,7 @@ jobs:
         uses: ncipollo/release-action@v1
         with:
           name: Apache Ranger ${{ matrix.version }}
-          artifacts: "apache-ranger-${{ matrix.version }}/target/*.tar.gz,apache-ranger-${{ matrix.version }}/target/*.jar"
+          artifacts: "apache-ranger-${{ matrix.version }}/target/*.tar.gz"
           replacesArtifacts: true
           body: "Apache Ranger compiled version ${{ matrix.version }} [Run timestamp ${{ steps.date.outputs.date }}]"
           allowUpdates: true
