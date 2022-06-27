@@ -92,7 +92,6 @@ jobs:
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-maven-
-
       - name: Build Apache Ranger ${{ matrix.version }}
         run: |
           cd apache-ranger-${{ matrix.version }}
@@ -101,22 +100,6 @@ jobs:
           else
             mvn clean compile package -DskipTests --no-transfer-progress -B -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn
           fi
-      - name: End build
-        id: end-build
-        run: |
-          m=$(echo '${{ toJson(fromJson(needs.discover-new-releases.outputs.matrix)) }}' | jq -c)
-          echo "::set-output name=matrix::$m"
-  release:
-    name: Release Apache Ranger ${{ matrix.version }}
-    if: ${{ needs.build.outputs.matrix != 'none' }}
-    strategy:
-      fail-fast: false
-      matrix: ${{ fromJson(needs.build.outputs.matrix) }}
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    needs: build
-    steps:
       - name: Create release ${{ matrix.version }}
         id: create-release
         uses: ncipollo/release-action@v1
