@@ -115,7 +115,7 @@ jobs:
           fi
       - name: Get current date
         id: date
-        run: echo "::set-output name=date::$(date +'%Y-%m-%d %H:%i:%s')"
+        run: echo "::set-output name=date::$(date +'%Y-%m-%d %H:%I:%S')"
       - name: Create release ${{ matrix.version }}
         id: create-release
         uses: ncipollo/release-action@v1
